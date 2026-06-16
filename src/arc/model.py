@@ -1,24 +1,25 @@
 import torch
 from torch import nn
-from arc.tf import TransformerBlock, TransformerBlock_v2
-from arc.norm import LayerNorm
-from typing import Tuple, Any, Optional, List
+from src.arc.tf import TransformerBlock, TransformerBlock_v2
+from src.arc.norm import LayerNorm
+from src.arc.config import GPTConfig
+from typing import Tuple, Optional, List
 
 class GPTModel(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, config: GPTConfig):
         super().__init__()
-        self.tok_emb = nn.Embedding(num_embeddings=cfg["vocab_size"], embedding_dim=cfg["emb_dim"])
-        self.pos_emb = nn.Embedding(num_embeddings=cfg["context_length"], embedding_dim=cfg["emb_dim"])
-        self.drop_emb = nn.Dropout(cfg["drop_rate"])
+        self.tok_emb = nn.Embedding(num_embeddings=config.vocab_size, embedding_dim=config.emb_dim)
+        self.pos_emb = nn.Embedding(num_embeddings=config.context_length, embedding_dim=config.emb_dim)
+        self.drop_emb = nn.Dropout(config.drop_rate)
 
 
         self.trf_blocks = nn.Sequential(
-            *[TransformerBlock(cfg=cfg) for _ in range(cfg["n_layers"])]
+            *[TransformerBlock(config=config) for _ in range(config.n_layers)]
         )
 
-        self.final_norm = LayerNorm(emb_dim=cfg["emb_dim"])
+        self.final_norm = LayerNorm(emb_dim=config.emb_dim)
         self.out_head = nn.Linear(
-            in_features=cfg["emb_dim"], out_features=cfg["vocab_size"], bias=False
+            in_features=config.emb_dim, out_features=config.vocab_size, bias=False
         )
 
 
@@ -41,19 +42,19 @@ class GPTModel(nn.Module):
 
 # custom implementation with RoPE, weight tying, combined QKV projections, KV cache
 class GPTModel_v2(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, config):
         super().__init__()
-        self.cfg = cfg
-        self.tok_emb = nn.Embedding(cfg["vocab_size"], cfg["emb_dim"])
-        self.drop_emb = nn.Dropout(cfg["drop_rate"])
+        self.config = config
+        self.tok_emb = nn.Embedding(config.vocab_size, config.emb_dim)
+        self.drop_emb = nn.Dropout(config.drop_rate)
         
         # Use ModuleList to allow per-layer cache handling
         self.trf_blocks = nn.ModuleList([
-            TransformerBlock_v2(cfg) for _ in range(cfg["n_layers"])
+            TransformerBlock_v2(config) for _ in range(config.n_layers)
         ])
         
-        self.final_norm = nn.LayerNorm(cfg["emb_dim"])
-        self.out_head = nn.Linear(cfg["emb_dim"], cfg["vocab_size"], bias=False)
+        self.final_norm = nn.LayerNorm(config.emb_dim)
+        self.out_head = nn.Linear(config.emb_dim, config.vocab_size, bias=False)
         # Weight tying:
         self.out_head.weight = self.tok_emb.weight
         

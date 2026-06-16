@@ -1,26 +1,27 @@
 import torch
 from torch import nn
-from arc.attention import MultiHeadAttention, MultiHeadAttention_v2
-from arc.ff import FeedForward
-from arc.norm import LayerNorm
-from typing import Tuple, Any, Optional, List
+from src.arc.attention import MultiHeadAttention, MultiHeadAttention_v2
+from src.arc.ff import FeedForward
+from src.arc.norm import LayerNorm
+from src.arc.config import GPTConfig
+from typing import Tuple, Optional
 
 
 class TransformerBlock(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, config: GPTConfig):
         super().__init__()
         self.att = MultiHeadAttention(
-            d_in=cfg["emb_dim"],
-            d_out=cfg["emb_dim"],
-            context_length=cfg["context_length"],
-            dropout=cfg["drop_rate"],
-            num_heads=cfg["n_heads"],
-            qkv_bias=cfg["qkv_bias"],
+            d_in=config.emb_dim,
+            d_out=config.emb_dim,
+            context_length=config.context_length,
+            dropout=config.drop_rate,
+            num_heads=config.n_heads,
+            qkv_bias=config.qkv_bias,
         )
-        self.ff = FeedForward(cfg=cfg)
-        self.norm1 = LayerNorm(emb_dim=cfg["emb_dim"])
-        self.norm2 = LayerNorm(emb_dim=cfg["emb_dim"])
-        self.drop_shortcut = nn.Dropout(p=cfg["drop_rate"])
+        self.ff = FeedForward(config=config)
+        self.norm1 = LayerNorm(emb_dim=config.emb_dim)
+        self.norm2 = LayerNorm(emb_dim=config.emb_dim)
+        self.drop_shortcut = nn.Dropout(p=config.drop_rate)
 
     def forward(self, x):
 
@@ -41,20 +42,20 @@ class TransformerBlock(nn.Module):
 
 # Custom implementation with KV cache
 class TransformerBlock_v2(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, config: GPTConfig):
         super().__init__()
         self.att = MultiHeadAttention_v2(
-            d_in=cfg["emb_dim"],
-            d_out=cfg["emb_dim"],
-            context_length=cfg["context_length"],
-            dropout=cfg["drop_rate"],
-            num_heads=cfg["n_heads"],
-            qkv_bias=cfg["qkv_bias"],
+            d_in=config.emb_dim,
+            d_out=config.emb_dim,
+            context_length=config.context_length,
+            dropout=config.drop_rate,
+            num_heads=config.n_heads,
+            qkv_bias=config.qkv_bias,
         )
-        self.ff = FeedForward(cfg)
-        self.norm1 = nn.LayerNorm(cfg["emb_dim"])
-        self.norm2 = nn.LayerNorm(cfg["emb_dim"])
-        self.dropout = nn.Dropout(cfg["drop_rate"])
+        self.ff = FeedForward(config=config)
+        self.norm1 = nn.LayerNorm(config.emb_dim)
+        self.norm2 = nn.LayerNorm(config.emb_dim)
+        self.dropout = nn.Dropout(config.drop_rate)
 
     def forward(
         self,

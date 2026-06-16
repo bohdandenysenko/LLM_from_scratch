@@ -97,7 +97,7 @@ class MultiHeadAttention(nn.Module):
 
         attn_scores.masked_fill_(mask_bool, -torch.inf)
 
-        attn_weights = torch.softmax(attn_scores / self.d_out**0.5, dim=-1)
+        attn_weights = torch.softmax(attn_scores / self.head_dim**0.5, dim=-1)
 
         attn_weights = self.dropout(attn_weights)
 

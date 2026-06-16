@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from src.arc.config import GPTConfig
 
 
 class GELU(nn.Module):
@@ -21,12 +22,12 @@ class GELU(nn.Module):
 
 
 class FeedForward(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self, config: GPTConfig):
         super().__init__()
         self.layers = nn.Sequential(
-            nn.Linear(in_features=cfg["emb_dim"], out_features=4 * cfg["emb_dim"]),
+            nn.Linear(in_features=config.emb_dim, out_features=4 * config.emb_dim),
             GELU(),
-            nn.Linear(in_features=4 * cfg["emb_dim"], out_features=cfg["emb_dim"]),
+            nn.Linear(in_features=4 * config.emb_dim, out_features=config.emb_dim),
         )
 
     def forward(self, x):
